@@ -180,7 +180,7 @@ const httpsServer = https.createServer({
                   newDevice.save()
                     .then((newDevice) => {
                       console.log("new device: " + newDevice);
-                      if (token.automatic){
+                      if (validToken.automatic){
                         const cert = createClientCertificate(deviceName);
                         console.log("generated cert:" + cert);
                         res.statusCode = 200;
@@ -197,7 +197,7 @@ const httpsServer = https.createServer({
                 } else {
                   console.log("DEVICE::");
                   console.log(device);
-                  if ((device.enabled) || (token.automatic)){
+                  if ((device.enabled) || (validToken.automatic)){
                     if (device.devicetoken == req.headers.devicetoken) {
                       const cert = createClientCertificate(deviceName);
                       console.log(cert);
