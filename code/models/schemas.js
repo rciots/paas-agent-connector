@@ -51,24 +51,34 @@ const deviceSchema = new mongoose.Schema({
     crt: { type: String},
     key: { type: String}
   },
-  template: { type: mongoose.Schema.Types.ObjectId, ref: 'Template' },
-  files: [{
-    name: { type: String, required: true },
-    content: { type: String }
-  }],
+  token: { type: mongoose.Schema.Types.ObjectId, ref: 'Token' },
+  devicetoken: {
+    type: String,
+    required: true,
+    minlength: 16,
+    // Regular expression for a strong password (at least one lowercase letter, one uppercase letter, one number, and one special character)
+    validate: {
+      validator: function (v) {
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*?[0-9])(?=.*[@$!%*?&])[A-Za-z0-9\d@$!%*?&]{16,}$/.test(v);
+      },
+      message: 'Device Token must contain at least one lowercase letter, one uppercase letter, one number, and one special character, and be at least 16 characters long'
+    }
+  },
   options: {
     visible: {
       type: Boolean,
-      required: true,
-      default: true
+      required: true
     },
-    token: { type: mongoose.Schema.Types.ObjectId, ref: 'Token' },
     connector: {
       type: [{
         type: String,
         enum: ['option1', 'option2', 'option3']
       }]
-    }
+    },
+    actions: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Action'
+    }]
   }
 }, { timestamps: true });
 
@@ -103,8 +113,7 @@ valid: { type: Date, required: true, default: function () {
 automatic: { type: Boolean, default: false, required: true },
 enrolled: { type: Number, default: 0, required: true },
 maxdevices: { type: Number, default: 10, required: true },
-active: { type: Boolean, default: true, required: true },
-template: { type: mongoose.Schema.Types.ObjectId, ref: 'Template' }
+active: { type: Boolean, default: true, required: true }
 });  
 
 module.exports = {
