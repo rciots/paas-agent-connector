@@ -98,6 +98,7 @@ io.on('connection', socket => {
       
             httpResponse.on('end', () => {
               // Send the HTTP response via Socket.IO
+              responseData = JSON.parse(responseData);
               console.log(responseData);
               if (responseData.send){
                 socket.emit('manifest', responseData.data);
