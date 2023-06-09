@@ -140,15 +140,15 @@ const httpsServer = https.createServer({
       var deviceName;
       console.log("Token: " + req.headers.authorization);
       Token.findOne({token: req.headers.authorization})
-        .then((token) => {
-          console.log("Token found:" + token);
-          if((!token) || (!token.active) || (token.valid < new Date())) {
+        .then((validToken) => {
+          console.log("Token found:" + validToken);
+          if((!validToken) || (!validToken.active) || (validToken.valid < new Date())) {
             console.log('Token not valid');
             return res.json({ message: 'Token not valid' });
           }else {
            
             if(req.headers.deviceid){
-              queryDevice = {_id: req.headers.deviceid, token: token._id};
+              queryDevice = {_id: req.headers.deviceid, token: validToken._id};
               if(req.headers.devicename){
                 deviceName = req.headers.devicename;
               } else {
@@ -157,8 +157,8 @@ const httpsServer = https.createServer({
             }else {
               if(req.headers.devicename){
                 deviceName = req.headers.devicename;
-                //get token._id
-                queryDevice = {token: token._id, name: req.headers.devicename};
+                //get validToken._id
+                queryDevice = {token: validToken._id, name: req.headers.devicename};
               } else {
                 console.log("require header with deviceid or devicename");
                 return res.write(JSON.stringify({ message: "require header with deviceid or devicename" }));
@@ -172,8 +172,8 @@ const httpsServer = https.createServer({
                   const newDevice = new Device({
                     name: deviceName,
                     description: "Device enrolled automatically",
-                    owner: token.owner,
-                    token: token._id,
+                    owner: validToken.owner,
+                    token: validToken._id,
                     devicetoken: generatePassword(),
                     options: { visible: true }
                   });
@@ -237,11 +237,15 @@ httpsServer.on('connection', (socket) => {
   });
 
   function createClientCertificate(clientName) {
-    const opensslkey = spawnSync('openssl', ['genpkey', '-algorithm', 'RSA', '-out', 'clientcerts/' + clientName + '.key']);
-    const opensslcsr = spawnSync('openssl', ['req', '-new', '-key', 'clientcerts/' + clientName + '.key', '-out', 'clientcerts/' + clientName + '.csr', '-config', 'client.cnf', '-subj', '/C=ES/ST=Madrid/L=Madrid/O=rciots.com/OU=devices/CN=' + clientName + '/']);
-    const opensslcrt = spawnSync('openssl', ['x509', '-req', '-in', 'clientcerts/' + clientName + '.csr', '-CA', 'clientCA.crt', '-CAkey', 'clientCA.key', '-CAcreateserial', '-CAserial',  'clientcerts/clientCA.srl', '-out', 'clientcerts/' + clientName + '.crt']);
-    const certContent = fs.readFileSync('clientcerts/' + clientName + '.crt', 'utf8');
-    fs.unlink('clientcerts/' + clientName + '.crt', (error) => {
+    const directory = '/tmp/clientcerts/';
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory);
+    }
+    const opensslkey = spawnSync('openssl', ['genpkey', '-algorithm', 'RSA', '-out', directory + clientName + '.key']);
+    const opensslcsr = spawnSync('openssl', ['req', '-new', '-key', directory + clientName + '.key', '-out', directory + clientName + '.csr', '-config', 'client.cnf', '-subj', '/C=ES/ST=Madrid/L=Madrid/O=rciots.com/OU=devices/CN=' + clientName + '/']);
+    const opensslcrt = spawnSync('openssl', ['x509', '-req', '-in', directory + clientName + '.csr', '-CA', 'clientCA.crt', '-CAkey', 'clientCA.key', '-CAcreateserial', '-CAserial',  directory + 'clientCA.srl', '-out', directory + clientName + '.crt']);
+    const certContent = fs.readFileSync(directory + clientName + '.crt', 'utf8');
+    fs.unlink(directory + clientName + '.crt', (error) => {
       if (error) {
         console.error(`Error deleting file: ${error}`);
         return;
@@ -249,8 +253,8 @@ httpsServer.on('connection', (socket) => {
     
       console.log('File deleted successfully');
     });
-    const keyContent = fs.readFileSync('clientcerts/' + clientName + '.key', 'utf8');
-    fs.unlink('clientcerts/' + clientName + '.key', (error) => {
+    const keyContent = fs.readFileSync(directory + clientName + '.key', 'utf8');
+    fs.unlink(directory + clientName + '.key', (error) => {
       if (error) {
         console.error(`Error deleting file: ${error}`);
         return;
@@ -258,7 +262,7 @@ httpsServer.on('connection', (socket) => {
     
       console.log('File deleted successfully');
     });
-    fs.unlink('clientcerts/' + clientName + '.csr', (error) => {
+    fs.unlink(directory + clientName + '.csr', (error) => {
       if (error) {
         console.error(`Error deleting file: ${error}`);
         return;
