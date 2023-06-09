@@ -64,21 +64,23 @@ const deviceSchema = new mongoose.Schema({
       message: 'Device Token must contain at least one lowercase letter, one uppercase letter, one number, and one special character, and be at least 16 characters long'
     }
   },
+  template: { type: mongoose.Schema.Types.ObjectId, ref: 'Template' },
+  files: [{
+    name: { type: String, required: true },
+    content: { type: String }
+  }],
   options: {
     visible: {
       type: Boolean,
-      required: true
+      required: true,
+      default: true
     },
     connector: {
       type: [{
         type: String,
         enum: ['option1', 'option2', 'option3']
       }]
-    },
-    actions: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Action'
-    }]
+    }
   }
 }, { timestamps: true });
 
