@@ -64,7 +64,7 @@ io.on('connection', socket => {
           path: `/${socket.deviceid}`,
           method: 'GET',
         };
-        const httpRequest = http.request(requestOptions, (httpResponse) => {
+        const httpRequestInit = http.request(requestOptions, (httpResponse) => {
           let responseData = '';
     
           httpResponse.on('data', (chunk) => {
@@ -82,11 +82,11 @@ io.on('connection', socket => {
           });
         });
     
-        httpRequest.on('error', (error) => {
+        httpRequestInit.on('error', (error) => {
           console.error('Error making HTTP request:', error);
         });
     
-        httpRequest.end();
+        httpRequestInit.end();
         const interval = setInterval(() => {
           
           const httpRequest = http.request(requestOptions, (httpResponse) => {
@@ -110,7 +110,7 @@ io.on('connection', socket => {
           });
       
           httpRequest.end();
-        }, 5 * 60 * 1000); // 5 * 60 * 1000 : 5 minutes in milliseconds
+        }, 60 * 1000); // 5 * 60 * 1000 = 5 minutes
       
         // Set up socket disconnect event to clear the interval
         socket.on('disconnect', () => {
