@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: paas-agent-connector
+  labels:
+    app: paas-agent-connector
+spec:
+  selector:
+    app: paas-agent-connector
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: 8080-tcp

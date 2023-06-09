@@ -1,0 +1,7 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: paas-agent-connector
+data:
+  MONGODB_CONNECT: 'mongodb://rciots:rciots-r3dh4t!@mongodb:27017/userdb'
+  PORT: '8080'
