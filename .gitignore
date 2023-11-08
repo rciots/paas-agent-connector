@@ -38,3 +38,4 @@ manifest/secret.yaml
 *.key
 *.srl
 certs/
+secret.yaml
