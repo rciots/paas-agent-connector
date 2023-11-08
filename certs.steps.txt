@@ -1,0 +1,34 @@
+1- Server CA:
+
+openssl genpkey -algorithm RSA -out serverCA.key
+openssl req -new -x509 -key serverCA.key -out serverCA.crt -config serverCA.cnf
+
+2- Server key:
+
+openssl genpkey -algorithm RSA -out server.key
+
+3- Server cert:
+
+openssl req -new -key server.key -out server.csr -config server.cnf
+openssl x509 -req -in server.csr -CA serverCA.crt -CAkey serverCA.key -CAcreateserial -out server.crt
+
+4- Client CA:
+
+openssl genpkey -algorithm RSA -out clientCA.key
+openssl req -new -x509 -key clientCA.key -out clientCA.crt
+
+5- Client key:
+
+openssl genpkey -algorithm RSA -out client.key
+
+6- Client cert:
+
+openssl req -new -key client.key -out client.csr
+openssl x509 -req -in client.csr -CA clientCA.crt -CAkey clientCA.key -CAcreateserial -out client.crt
+
+
+openssl genpkey -algorithm RSA -out clientcerts
+const opensslkey = spawnSync('openssl', ['genpkey', '-algorithm', 'RSA', '-out', 'clientcerts/' + clientName + '.key']);
+    const opensslcsr = spawnSync('openssl', ['req', '-new', '-key', 'clientcerts/' + clientName + '.key', '-out', 'clientcerts/' + clientName + '.csr', '-config', 'client.cnf', '-subj', '/C=ES/ST=Madrid/L=Madrid/O=rciots.com/OU=devices/CN=' + clientName + '/']);
+    const opensslcrt = spawnSync('openssl', ['x509', '-req', '-in', 'clientcerts/' + clientName + '.csr', '-CA', 'clientCA.crt', '-CAkey', 'clientCA.key', '-CAcreateserial', '-CAserial',  'clientcerts/clientCA.srl', '-out', 'clientcerts/' + clientName + '.crt']);
+    const certContent = fs.readFileSync('clientcerts/' + clientName + '.crt', 'utf8');

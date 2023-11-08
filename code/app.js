@@ -6,12 +6,19 @@ const mongoose = require('mongoose');
 const Device = require('./models/schemas').Device;
 const User = require('./models/schemas').User;
 const Token = require('./models/schemas').Token;
-
+var env = require('dotenv').config();
 const PORT = process.env.PORT || 8082;
-
+const WS_PORT = process.env.WS_PORT || 8081;
 const KEY_PASSPHRASE = process.env.KEY_PASSPHRASE || "";
+const clientCAKey = 'certs/clientCA.key';
+const clientCACert = 'certs/clientCA.crt';
+const serverKey = 'certs/server.key';
+const serverCert = 'certs/server.crt';
 
-const mongodb = process.env.MONGODB_CONNECT || 'mongodb://localhost/userdb';
+var mongodb = 'mongodb://localhost:27017/userdb';
+if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD && process.env.MONGODB_SERVER && process.env.MONGODB_PORT && process.env.MONGODB_DB) {
+  mongodb = 'mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PASSWORD + '@' + process.env.MONGODB_SERVER + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB;
+}
 
 mongoose.connect(mongodb, {
   useNewUrlParser: true,
@@ -26,13 +33,13 @@ db.once('open', function() {
 
 
 const io = require('socket.io')(https.createServer({
-    key: fs.readFileSync('server.key'),
+    key: serverKey,
     passphrase: KEY_PASSPHRASE,
-    cert: fs.readFileSync('server.crt'),
-    ca: fs.readFileSync('clientCA.crt'),
+    cert: serverCert,
+    ca: clientCACert,
     requestCert: true
-}).listen(8081, () => {
-    console.log('Socket.io server listening on port 8081');
+}).listen(WS_PORT, () => {
+    console.log(`WebSocket Server listening on port${WS_PORT}`);
 }));
 io.use((socket, next) => {
   console.log(socket.handshake);
@@ -53,8 +60,6 @@ io.use((socket, next) => {
     next(new Error("invalid3"));
   });
 });
-const clientCAKeypem = 'clientCA.key'; // Private key of client CA in PEM format
-const clientCACertpem = 'clientCA.crt';
 io.on('connection', socket => {
     try {
         console.log(`Client connected: ${socket.id}`);
@@ -133,9 +138,9 @@ io.on('connect_error', (error) => {
   });
 
 const httpsServer = https.createServer({
-    key: fs.readFileSync('server-enroll.key'),
+    key: serverKey,
     passphrase: KEY_PASSPHRASE,
-    cert: fs.readFileSync('server-enroll.crt')
+    cert: serverCert
 }, (req, res) => {
     if ((req.url === '/client-cert') && (req.headers.authorization)) {
       var deviceName;
@@ -182,11 +187,13 @@ const httpsServer = https.createServer({
                     .then((newDevice) => {
                       console.log("new device: " + newDevice);
                       if (validToken.automatic){
-                        const cert = createClientCertificate(deviceName);
+                        const cert = createClientCertificate(deviceName, newDevice._id);
                         console.log("generated cert:" + cert);
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'application/json');
-                        res.write(JSON.stringify({cert: cert, devicetoken: newDevice.devicetoken, deviceid: newDevice._id}));
+                        cert.devicetoken = newDevice.devicetoken;
+                        cert.deviceid = newDevice._id;
+                        res.write(JSON.stringify(cert));
                         res.end();
                       }else {
                         res.statusCode = 202;
@@ -200,7 +207,7 @@ const httpsServer = https.createServer({
                   console.log(device);
                   if ((device.enabled) || (validToken.automatic)){
                     if (device.devicetoken == req.headers.devicetoken) {
-                      const cert = createClientCertificate(deviceName);
+                      const cert = createClientCertificate(deviceName, device._id);
                       console.log(cert);
                       res.write(JSON.stringify(cert));
                       res.end();
@@ -235,16 +242,19 @@ httpsServer.on('connection', (socket) => {
     socket.setNoDelay(true);
     socket.setTimeout(0);
     socket.setKeepAlive(true);
+    socket.on("log", (data) => {
+      
+    });
   });
 
-  function createClientCertificate(clientName) {
-    const directory = '/tmp/clientcerts/';
+  function createClientCertificate(clientName, deviceid) {
+    const directory = '/tmp/clientcerts/' + deviceid + "/";
     if (!fs.existsSync(directory)) {
-      fs.mkdirSync(directory);
+      fs.mkdirSync(directory, {recursive: true});
     }
     const opensslkey = spawnSync('openssl', ['genpkey', '-algorithm', 'RSA', '-out', directory + clientName + '.key']);
     const opensslcsr = spawnSync('openssl', ['req', '-new', '-key', directory + clientName + '.key', '-out', directory + clientName + '.csr', '-config', 'client.cnf', '-subj', '/C=ES/ST=Madrid/L=Madrid/O=rciots.com/OU=devices/CN=' + clientName + '/']);
-    const opensslcrt = spawnSync('openssl', ['x509', '-req', '-in', directory + clientName + '.csr', '-CA', 'clientCA.crt', '-CAkey', 'clientCA.key', '-CAcreateserial', '-CAserial',  directory + 'clientCA.srl', '-out', directory + clientName + '.crt']);
+    const opensslcrt = spawnSync('openssl', ['x509', '-req', '-in', directory + clientName + '.csr', '-CA', clientCACert, '-CAkey', clientCAKey, '-CAcreateserial', '-CAserial',  directory + clientName + '.srl', '-out', directory + clientName + '.crt']);
     const certContent = fs.readFileSync(directory + clientName + '.crt', 'utf8');
     fs.unlink(directory + clientName + '.crt', (error) => {
       if (error) {
@@ -271,9 +281,19 @@ httpsServer.on('connection', (socket) => {
     
       console.log('File deleted successfully');
     });
+    const serialContent = fs.readFileSync(directory + clientName + '.srl', 'utf8');
+    fs.unlink(directory + clientName + '.srl', (error) => {
+      if (error) {
+        console.error(`Error deleting file: ${error}`);
+        return;
+      }
+    
+      console.log('File deleted successfully');
+    });
     const result = {
       cert: certContent,
-      key: keyContent
+      key: keyContent,
+      serial: serialContent
     };
     return result;
   }

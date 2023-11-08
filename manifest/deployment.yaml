@@ -26,9 +26,19 @@ spec:
           env:        
             - name: PORT
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: paas-agent-connector
                   key: PORT
+            - name: KEY_PASSPHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: paas-agent-connector
+                  key: KEY_PASSPHRASE
+            - name: MONGODB_CONNECT
+              valueFrom:
+                secretKeyRef:
+                  name: paas-agent-connector
+                  key: MONGODB_CONNECT
           ports:
             - containerPort: 8080
               protocol: TCP
