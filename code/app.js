@@ -252,7 +252,7 @@ httpsServer.on('connection', (socket) => {
       fs.mkdirSync(directory, {recursive: true});
     }
     const opensslkey = spawnSync('openssl', ['genpkey', '-algorithm', 'RSA', '-out', directory + clientName + '.key']);
-    const opensslcsr = spawnSync('openssl', ['req', '-new', '-key', directory + clientName + '.key', '-out', directory + clientName + '.csr', '-config', 'client.cnf', '-subj', '/C=ES/ST=Madrid/L=Madrid/O=rciots.com/OU=devices/CN=' + clientName + '/']);
+    const opensslcsr = spawnSync('openssl', ['req', '-new', '-key', directory + clientName + '.key', '-out', directory + clientName + '.csr', '-config', 'certs/client.cnf', '-subj', '/C=ES/ST=Madrid/L=Madrid/O=rciots.com/OU=devices/CN=' + clientName + '/']);
     const opensslcrt = spawnSync('openssl', ['x509', '-req', '-in', directory + clientName + '.csr', '-CA', clientCACert, '-CAkey', clientCAKey, '-CAcreateserial', '-CAserial',  directory + clientName + '.srl', '-out', directory + clientName + '.crt']);
     const certContent = fs.readFileSync(directory + clientName + '.crt', 'utf8');
     fs.unlink(directory + clientName + '.crt', (error) => {
