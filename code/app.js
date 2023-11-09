@@ -182,16 +182,19 @@ const httpsServer = https.createServer({
                     devicetoken: generatePassword(),
                     options: { visible: true }
                   });
+                  if (validToken.automatic){
+                    newDevice.enabled = true;
+                  }
                   newDevice.save()
-                    .then((newDevice) => {
-                      console.log("new device: " + newDevice);
+                    .then((createdDevice) => {
+                      console.log("new device: " + createdDevice);
                       if (validToken.automatic){
-                        const cert = createClientCertificate(deviceName, newDevice._id);
+                        const cert = createClientCertificate(deviceName, createdDevice._id);
                         console.log("generated cert:" + cert);
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'application/json');
-                        cert.devicetoken = newDevice.devicetoken;
-                        cert.deviceid = newDevice._id;
+                        cert.devicetoken = createdDevice.devicetoken;
+                        cert.deviceid = createdDevice._id;
                         res.write(JSON.stringify(cert));
                         res.end();
                       }else {
