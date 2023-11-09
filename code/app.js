@@ -31,12 +31,11 @@ db.once('open', function() {
   console.log('Database connected!');
 });
 
-
 const io = require('socket.io')(https.createServer({
-    key: serverKey,
+    key: fs.readFileSync(serverKey),
     passphrase: KEY_PASSPHRASE,
-    cert: serverCert,
-    ca: clientCACert,
+    cert: fs.readFileSync(serverCert),
+    ca: fs.readFileSync(clientCACert),
     requestCert: true
 }).listen(WS_PORT, () => {
     console.log(`WebSocket Server listening on port${WS_PORT}`);
@@ -138,9 +137,9 @@ io.on('connect_error', (error) => {
   });
 
 const httpsServer = https.createServer({
-    key: serverKey,
+    key: fs.readFileSync(serverKey),
     passphrase: KEY_PASSPHRASE,
-    cert: serverCert
+    cert: fs.readFileSync(serverCert)
 }, (req, res) => {
     if ((req.url === '/client-cert') && (req.headers.authorization)) {
       var deviceName;
