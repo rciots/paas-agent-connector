@@ -174,7 +174,7 @@ const httpsServer = https.createServer({
               .then((device) => {
                 console.log(device);
                 if(!device){
-                  const newDevice = new Device({
+                  var newDevice = new Device({
                     name: deviceName,
                     description: "Device enrolled automatically",
                     owner: validToken.owner,
