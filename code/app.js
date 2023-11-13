@@ -64,7 +64,7 @@ io.on('connection', socket => {
     try {
         console.log(`Client connected: ${socket.id}`);
         const requestOptions = {
-          host: 'paas-kustomize',
+          host: KUSTOMIZE_HOST,
           port: 8080,
           path: `/${socket.deviceid}`,
           method: 'GET',
