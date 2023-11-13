@@ -10,6 +10,7 @@ var env = require('dotenv').config();
 const PORT = process.env.PORT || 8082;
 const WS_PORT = process.env.WS_PORT || 8081;
 const KEY_PASSPHRASE = process.env.KEY_PASSPHRASE || "";
+const KUSTOMIZE_HOST = process.env.KUSTOMIZE_HOST || "paas-kustomize";
 const clientCAKey = 'certs/clientCA.key';
 const clientCACert = 'certs/clientCA.crt';
 const serverKey = 'certs/server.key';
