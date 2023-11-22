@@ -132,7 +132,6 @@ io.on('connection', socket => {
         console.error(`Error connecting client ${socket.id}: ${error.message}`);
       }
       socket.on("metric", (data) => {
-        console.log(data);
         const req = http.request(promRemoteWriteOptions, (res) => {
           let data = '';
   
@@ -141,7 +140,6 @@ io.on('connection', socket => {
           });
         
           res.on('end', () => {
-            console.log('Respuesta:', data);
           });
         });
         req.on('error', (error) => {
