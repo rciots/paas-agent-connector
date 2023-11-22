@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 8082;
 const WS_PORT = process.env.WS_PORT || 8081;
 const KEY_PASSPHRASE = process.env.KEY_PASSPHRASE || "";
 const KUSTOMIZE_HOST = process.env.KUSTOMIZE_HOST || "paas-kustomize";
+const PROMETHEUS_HOST = process.env.PROMETHEUS_HOST || "paas-prometheus";
 const clientCAKey = 'certs/clientCA.key';
 const clientCACert = 'certs/clientCA.crt';
 const serverKey = 'certs/server.key';
@@ -241,12 +242,45 @@ const httpsServer = https.createServer({
     console.log(`Server listening on port${PORT}`);
 });
 
+const promRemoteWriteOptions = {
+  hostname: PROMETHEUS_HOST,
+  port: 9090,
+  path: '/api/v1/write',
+  method: 'POST',
+  headers: {
+    "Content-Encoding": "snappy",
+    "Content-Type": "application/x-protobuf",
+    "User-Agent": "paas-agent-connector",
+    "X-Prometheus-Remote-Write-Version": "0.1.0"
+  }
+};
+
 httpsServer.on('connection', (socket) => {
     socket.setNoDelay(true);
     socket.setTimeout(0);
     socket.setKeepAlive(true);
     socket.on("log", (data) => {
       
+    });
+    socket.on("metric", (data) => {
+      console.log(data);
+      const req = http.request(promRemoteWriteOptions, (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+      
+        res.on('end', () => {
+          console.log('Respuesta:', data);
+        });
+      });
+      req.on('error', (error) => {
+        console.error('Error en la solicitud:', error);
+      });
+      
+      // Envía los datos en el cuerpo de la solicitud
+      req.write(data);
     });
   });
 
