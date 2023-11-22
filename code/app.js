@@ -132,24 +132,22 @@ io.on('connection', socket => {
         console.error(`Error connecting client ${socket.id}: ${error.message}`);
       }
       socket.on("metric", (data) => {
-        const req = http.request(promRemoteWriteOptions, (res) => {
-          let data = '';
-  
+        promRemoteWriteOptions.headers["Content-Length"] = Buffer.byteLength(data);
+        var request = http.request(promRemoteWriteOptions, (res) => {
+          res.setEncoding('utf8');
           res.on('data', (chunk) => {
-            data += chunk;
+              console.log('Response: ' + chunk);
           });
-        
-          res.on('end', () => {
-          });
+
         });
-        req.on('error', (error) => {
+        request.on('error', (error) => {
           console.error('Error en la solicitud:', error);
         });
-        
+        request.write(data);
+        request.end();
         // Envía los datos en el cuerpo de la solicitud
-        req.write(data);
-        req.end();
       });
+
 });
 
 io.on('connect_error', (error) => {
