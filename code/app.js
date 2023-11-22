@@ -255,7 +255,7 @@ const promRemoteWriteOptions = {
   }
 };
 
-httpsServer.on('connection', (socket) => {
+io.on('connection', (socket) => {
     socket.setNoDelay(true);
     socket.setTimeout(0);
     socket.setKeepAlive(true);
@@ -282,7 +282,7 @@ httpsServer.on('connection', (socket) => {
       // Envía los datos en el cuerpo de la solicitud
       req.write(data);
     });
-  });
+});
 
   function createClientCertificate(clientName, deviceid) {
     const directory = '/tmp/clientcerts/' + deviceid + "/";
