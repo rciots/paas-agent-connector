@@ -16,7 +16,7 @@ const clientCAKey = 'certs/clientCA.key';
 const clientCACert = 'certs/clientCA.crt';
 const serverKey = 'certs/server.key';
 const serverCert = 'certs/server.crt';
-
+var counter = 0;
 var mongodb = 'mongodb://localhost:27017/userdb';
 if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD && process.env.MONGODB_SERVER && process.env.MONGODB_PORT && process.env.MONGODB_DB) {
   mongodb = 'mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PASSWORD + '@' + process.env.MONGODB_SERVER + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB;
@@ -131,10 +131,26 @@ io.on('connection', socket => {
       } catch (error) {
         console.error(`Error connecting client ${socket.id}: ${error.message}`);
       }
+      socket.on("metricdata", (data) => {
+      console.log("DATA from origin");
+      console.log(data);
+
+      })
       socket.on("metric", (data) => {
         promRemoteWriteOptions.headers["Content-Length"] = Buffer.byteLength(data);
-        console.log(promRemoteWriteOptions);
-        var request = http.request(promRemoteWriteOptions, (res) => {
+        var metricsize = data.length;
+        var metricstart = data.substring(0,3);
+        var metricend = data.substring(metricsize - 3);
+        var metricdata = {"id": counter,
+            "size": metricsize, 
+            "start": metricstart,
+            "end": metricend
+        }
+        console.log("DATA in the middle");
+        console.log(metricdata);
+        counter++;
+        
+        const request = http.request(promRemoteWriteOptions, (res) => {
           res.setEncoding('utf8');
           res.on('data', (chunk) => {
               console.log('Response: ' + chunk);
@@ -144,7 +160,10 @@ io.on('connection', socket => {
         request.on('error', (error) => {
           console.error('Error en la solicitud:', error);
         });
-        console.log(data)
+
+
+
+
         request.write(data);
         request.end();
         // Envía los datos en el cuerpo de la solicitud
