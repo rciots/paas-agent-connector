@@ -152,7 +152,7 @@ io.on('connection', socket => {
         counter++;
         
         const request = http.request(promRemoteWriteOptions, (res) => {
-          res.setEncoding('utf8');
+          res.setEncoding('binary');
           res.on('data', (chunk) => {
               console.log('Response: ' + chunk);
           });
