@@ -148,6 +148,7 @@ io.on('connection', socket => {
         
         // Envía los datos en el cuerpo de la solicitud
         req.write(data);
+        req.end();
       });
 });
 
