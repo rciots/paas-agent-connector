@@ -21,7 +21,7 @@ var mongodb = 'mongodb://localhost:27017/userdb';
 if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD && process.env.MONGODB_SERVER && process.env.MONGODB_PORT && process.env.MONGODB_DB) {
   mongodb = 'mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PASSWORD + '@' + process.env.MONGODB_SERVER + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB;
 }
-
+const snappy = require('snappy');
 mongoose.connect(mongodb, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -132,8 +132,6 @@ io.on('connection', socket => {
         console.error(`Error connecting client ${socket.id}: ${error.message}`);
       }
       socket.on("metricdata", (data) => {
-      console.log("DATA from origin");
-      console.log(data);
 
       })
       socket.on("metric", (data) => {
@@ -147,10 +145,19 @@ io.on('connection', socket => {
             "start": metricstart,
             "end": metricend
         }
-        console.log("DATA in the middle");
-        console.log(metricdata);
         counter++;
-        
+        const promRemoteWriteOptions = {
+          hostname: PROMETHEUS_HOST,
+          port: 9090,
+          path: '/api/v1/write',
+          method: 'POST',
+          headers: {
+            "Content-Encoding": "snappy",
+            "Content-Type": "application/x-protobuf",
+            "User-Agent": "paas-agent-connector",
+            "X-Prometheus-Remote-Write-Version": "0.1.0"
+          }
+        };
         const request = http.request(promRemoteWriteOptions, (res) => {
           res.on('data', (chunk) => {
               console.log('Response: ' + chunk);
@@ -160,15 +167,19 @@ io.on('connection', socket => {
         request.on('error', (error) => {
           console.error('Error en la solicitud:', error);
         });
-
-
-
-
+        snappy.uncompress(data, (error, descomprimido) => {
+          if (error) {
+            console.error('Error al descomprimir:', error);
+            return;
+          }
+      
+          // Mostrar el contenido descomprimido en la consola
+          console.log(descomprimido.toString());
+        });
         request.write(data);
         request.end();
         // Envía los datos en el cuerpo de la solicitud
       });
-
 });
 
 io.on('connect_error', (error) => {
@@ -280,18 +291,7 @@ const httpsServer = https.createServer({
     console.log(`Server listening on port${PORT}`);
 });
 
-const promRemoteWriteOptions = {
-  hostname: PROMETHEUS_HOST,
-  port: 9090,
-  path: '/api/v1/write',
-  method: 'POST',
-  headers: {
-    "Content-Encoding": "snappy",
-    "Content-Type": "application/x-protobuf",
-    "User-Agent": "paas-agent-connector",
-    "X-Prometheus-Remote-Write-Version": "0.1.0"
-  }
-};
+
 //
 //io.on('connection', (socket) => {
 //    socket.setNoDelay(true);
