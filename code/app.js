@@ -142,6 +142,7 @@ io.on('connection', socket => {
         var metricstart = data.substring(0,3);
         var metricend = data.substring(metricsize - 3);
         var metricdata = {"id": counter,
+            "type": typeof body,
             "size": metricsize, 
             "start": metricstart,
             "end": metricend
