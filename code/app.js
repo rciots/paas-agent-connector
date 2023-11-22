@@ -26,6 +26,20 @@ mongoose.connect(mongodb, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
+
+const promRemoteWriteOptions = {
+  hostname: PROMETHEUS_HOST,
+  port: 9090,
+  path: '/api/v1/write',
+  method: 'POST',
+  headers: {
+    "Content-Encoding": "snappy",
+    "Content-Type": "application/x-protobuf",
+    "User-Agent": "paas-agent-connector",
+    "X-Prometheus-Remote-Write-Version": "0.1.0"
+  }
+};
+
 const db = mongoose.connection;
 
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -146,18 +160,7 @@ io.on('connection', socket => {
             "end": metricend
         }
         counter++;
-        const promRemoteWriteOptions = {
-          hostname: PROMETHEUS_HOST,
-          port: 9090,
-          path: '/api/v1/write',
-          method: 'POST',
-          headers: {
-            "Content-Encoding": "snappy",
-            "Content-Type": "application/x-protobuf",
-            "User-Agent": "paas-agent-connector",
-            "X-Prometheus-Remote-Write-Version": "0.1.0"
-          }
-        };
+
         const request = http.request(promRemoteWriteOptions, (res) => {
           res.on('data', (chunk) => {
               console.log('Response: ' + chunk);
