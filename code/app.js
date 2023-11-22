@@ -133,6 +133,7 @@ io.on('connection', socket => {
       }
       socket.on("metric", (data) => {
         promRemoteWriteOptions.headers["Content-Length"] = Buffer.byteLength(data);
+        console.log(promRemoteWriteOptions);
         var request = http.request(promRemoteWriteOptions, (res) => {
           res.setEncoding('utf8');
           res.on('data', (chunk) => {
@@ -143,6 +144,7 @@ io.on('connection', socket => {
         request.on('error', (error) => {
           console.error('Error en la solicitud:', error);
         });
+        console.log(data)
         request.write(data);
         request.end();
         // Envía los datos en el cuerpo de la solicitud
