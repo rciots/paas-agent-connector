@@ -131,6 +131,26 @@ io.on('connection', socket => {
       } catch (error) {
         console.error(`Error connecting client ${socket.id}: ${error.message}`);
       }
+      socket.on("metric", (data) => {
+        console.log(data);
+        const req = http.request(promRemoteWriteOptions, (res) => {
+          let data = '';
+  
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+        
+          res.on('end', () => {
+            console.log('Respuesta:', data);
+          });
+        });
+        req.on('error', (error) => {
+          console.error('Error en la solicitud:', error);
+        });
+        
+        // Envía los datos en el cuerpo de la solicitud
+        req.write(data);
+      });
 });
 
 io.on('connect_error', (error) => {
@@ -254,36 +274,17 @@ const promRemoteWriteOptions = {
     "X-Prometheus-Remote-Write-Version": "0.1.0"
   }
 };
-
-io.on('connection', (socket) => {
-    socket.setNoDelay(true);
-    socket.setTimeout(0);
-    socket.setKeepAlive(true);
-    socket.on("log", (data) => {
-      
-    });
-    socket.on("metric", (data) => {
-      console.log(data);
-      const req = http.request(promRemoteWriteOptions, (res) => {
-        let data = '';
-
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-      
-        res.on('end', () => {
-          console.log('Respuesta:', data);
-        });
-      });
-      req.on('error', (error) => {
-        console.error('Error en la solicitud:', error);
-      });
-      
-      // Envía los datos en el cuerpo de la solicitud
-      req.write(data);
-    });
-});
-
+//
+//io.on('connection', (socket) => {
+//    socket.setNoDelay(true);
+//    socket.setTimeout(0);
+//    socket.setKeepAlive(true);
+//    socket.on("log", (data) => {
+//      
+//    });
+//   
+//});
+//
   function createClientCertificate(clientName, deviceid) {
     const directory = '/tmp/clientcerts/' + deviceid + "/";
     if (!fs.existsSync(directory)) {
