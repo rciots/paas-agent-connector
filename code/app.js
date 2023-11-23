@@ -158,19 +158,16 @@ io.on('connection', socket => {
 
         });
         request.on('error', (error) => {
-          console.error('Error en la solicitud:', error);
+          console.error('Error request:', error);
         });
-        snappy.uncompress(data, (error, descomprimido) => {
+        snappy.uncompress(data, (error, uncompressData) => {
           if (error) {
-            console.error('Error al descomprimir:', error);
+            console.error('Error uncompress:', error);
           }
-      
-          // Mostrar el contenido descomprimido en la consola
-          console.log(descomprimido.toString());
+          console.log(uncompressData.toString());
         });
         request.write(data);
         request.end();
-        // Envía los datos en el cuerpo de la solicitud
       });
 });
 
