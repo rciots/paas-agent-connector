@@ -149,6 +149,7 @@ io.on('connection', socket => {
 
       })
       socket.on("metric", (data) => {
+        console.log("metrics comming...");
         promRemoteWriteOptions.headers["Content-Length"] = Buffer.byteLength(data);
 
         const request = http.request(promRemoteWriteOptions, (res) => {
@@ -160,7 +161,7 @@ io.on('connection', socket => {
         request.on('error', (error) => {
           console.error('Error request:', error);
         });
-
+        console.log("snappy");
         snappy.uncompress(data, (error, uncompressData) => {
           if (error) {
             console.error('Error uncompress:', error);
