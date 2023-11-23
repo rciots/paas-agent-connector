@@ -150,16 +150,6 @@ io.on('connection', socket => {
       })
       socket.on("metric", (data) => {
         promRemoteWriteOptions.headers["Content-Length"] = Buffer.byteLength(data);
-        var metricsize = data.length;
-        var metricstart = data.substring(0,3);
-        var metricend = data.substring(metricsize - 3);
-        var metricdata = {"id": counter,
-            "type": typeof data,
-            "size": metricsize, 
-            "start": metricstart,
-            "end": metricend
-        }
-        counter++;
 
         const request = http.request(promRemoteWriteOptions, (res) => {
           res.on('data', (chunk) => {
@@ -173,7 +163,6 @@ io.on('connection', socket => {
         snappy.uncompress(data, (error, descomprimido) => {
           if (error) {
             console.error('Error al descomprimir:', error);
-            return;
           }
       
           // Mostrar el contenido descomprimido en la consola
