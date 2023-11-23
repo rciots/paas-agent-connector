@@ -160,14 +160,16 @@ io.on('connection', socket => {
         request.on('error', (error) => {
           console.error('Error request:', error);
         });
+
         snappy.uncompress(data, (error, uncompressData) => {
           if (error) {
             console.error('Error uncompress:', error);
           }
+          console.log("Uncompressed: ");
           console.log(uncompressData.toString());
+          request.write(data);
+          request.end();
         });
-        request.write(data);
-        request.end();
       });
 });
 
