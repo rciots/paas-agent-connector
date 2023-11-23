@@ -162,7 +162,7 @@ io.on('connection', socket => {
           console.error('Error request:', error);
         });
         console.log("snappy");
-        snappy.uncompressSync(Buffer.from(data), (error, uncompressData) => {
+        snappy.uncompress(data.toString(), (error, uncompressData) => {
           if (error) {
             console.error('Error uncompress:', error);
           }
