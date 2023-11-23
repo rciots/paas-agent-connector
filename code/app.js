@@ -21,7 +21,6 @@ var mongodb = 'mongodb://localhost:27017/userdb';
 if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD && process.env.MONGODB_SERVER && process.env.MONGODB_PORT && process.env.MONGODB_DB) {
   mongodb = 'mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PASSWORD + '@' + process.env.MONGODB_SERVER + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB;
 }
-const snappy = require('snappy');
 mongoose.connect(mongodb, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -161,16 +160,8 @@ io.on('connection', socket => {
         request.on('error', (error) => {
           console.error('Error request:', error);
         });
-        console.log("snappy");
-        snappy.uncompress(data, (error, uncompressData) => {
-          if (error) {
-            console.error('Error uncompress:', error);
-          }
-          console.log("Uncompressed: ");
-          console.log(uncompressData);
-          request.write(data);
-          request.end();
-        });
+        request.write(data);
+        request.end();
       });
 });
 
